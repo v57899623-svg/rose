@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Биографии Знаменитостей</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f5f5f5;
+            margin: 0;
+            padding: 0;
+            color: #333;
+        }
+        header {
+            background: #007bff;
+            color: white;
+            padding: 20px;
+            font-size: 28px;
+            text-align: center;
+        }
+        .search-box {
+            margin: 20px auto;
+            text-align: center;
+        }
+        input[type="text"] {
+            padding: 10px;
+            font-size: 16px;
+            width: 60%;
+            max-width: 400px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            transition: box-shadow 0.3s;
+        }
+        input[type="text"]:focus {
+            outline: none;
+            box-shadow: 0 0 5px #007bff;
+            border-color: #007bff;
+        }
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+            padding: 20px;
+        }
+        .card {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            width: 250px;
+            text-align: center;
+            transition: transform 0.3s, box-shadow 0.3s;
+            cursor: pointer;
+        }
+        .card:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 15px rgba(0,0,0,0.2);
+        }
+        .card img {
+            max-width: 100%;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            user-select: none;
+        }
+        .info-panel {
+            position: fixed;
+            top: 0;
+            right: -320px; /* чуть больше ширины для плавности */
+            width: 300px;
+            height: 100%;
+            background: white;
+            box-shadow: -2px 0 15px rgba(0,0,0,0.3);
+            transition: right 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            padding: 20px;
+            overflow-y: auto;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+        }
+        .info-panel.open {
+            right: 0;
+        }
+        .close-btn {
+            background: red;
+            color: white;
+            padding: 8px 12px;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            align-self: flex-start;
+            user-select: none;
+            transition: background-color 0.3s;
+        }
+        .close-btn:hover {
+            background-color: #b30000;
+        }
+        .panel-btn {
+            display: block;
+            margin: 8px 0;
+            background: #007bff;
+            color: white;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 100%;
+            text-align: left;
+            user-select: none;
+            transition: background-color 0.3s;
+        }
+        .panel-btn:hover {
+            background: #0056b3;
+        }
+        #infoContent {
+            margin-top: 15px;
+            font-size: 16px;
+            flex-grow: 1;
+        }
+
+        /* Адаптив */
+        @media (max-width: 700px) {
+            .container {
+                gap: 15px;
+                padding: 10px;
+            }
+            .card {
+                width: 45%;
+            }
+            input[type="text"] {
+                width: 90%;
+                max-width: none;
+            }
+            .info-panel {
+                width: 100%;
+                height: 50%;
+                bottom: 0;
+                top: auto;
+                right: 0;
+                transform: translateY(100%);
+                transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+                border-top-left-radius: 15px;
+                border-top-right-radius: 15px;
+                padding: 15px;
+            }
+            .info-panel.open {
+                transform: translateY(0);
+                right: 0;
+            }
+            .close-btn {
+                align-self: center;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <header>Биографии Знаменитостей</header>
+
+    <div class="search-box">
+        <input type="text" id="search" placeholder="Введите имя знаменитости..." autocomplete="off" />
+    </div>
+
+    <div class="container" id="celebrity-list">
+        <!-- Карточки добавляются через JS -->
+    </div>
+
+    <div class="info-panel" id="infoPanel">
+        <button class="close-btn" onclick="closePanel()">Закрыть</button>
+        <h2 id="celebName"></h2>
+        <button class="panel-btn" onclick="showInfo('age')">Возраст</button>
+        <button class="panel-btn" onclick="showInfo('height')">Рост</button>
+        <button class="panel-btn" onclick="showInfo('family')">Семья</button>
+        <button class="panel-btn" onclick="showInfo('job')">Работа</button>
+        <button class="panel-btn" onclick="showInfo('bio')">Биография</button>
+        <button class="panel-btn" onclick="showInfo('photo')">Фото</button>
+        <div id="infoContent"></div>
+    </div>
+
+    <script>
+        const celebrities = [
+            {
+                name: "Влад Яма",
+                age: "41 год (родился 10 июля 1982)",
+                height: "180 см",
+                family: "Женат на Лилии Яме, есть сын.",
+                job: "Хореограф, танцор, телеведущий, судья шоу «Танці з зірками».",
+                bio: "Влад Яма — известный украинский хореограф, родился в Запорожье. Стал популярным благодаря танцевальным шоу и телевидению. Работает в шоу-бизнесе более 20 лет.",
+                photo: "https://upload.wikimedia.org/wikipedia/commons/e/ea/Vlad_Yama_2020.jpg"
+            },
+            {
+                name: "Монатик",
+                age: "37 лет (родился 1 апреля 1986)",
+                height: "168 см",
+                family: "Женат, двое детей.",
+                job: "Певец, композитор, танцор, продюсер.",
+                bio: "Дмитрий Монатик — украинский певец и танцор, прославился яркими хитами и шоу. Начинал как танцор, затем стал одним из ведущих артистов Украины.",
+                photo: "https://upload.wikimedia.org/wikipedia/commons/f/f1/Monatik_2020.jpg"
+            },
+            {
+                name: "Джамала",
+                age: "40 лет (родилась 27 августа 1983)",
+                height: "174 см",
+                family: "Замужем, двое детей.",
+                job: "Певица, победительница Евровидения 2016.",
+                bio: "Джамала (Сусана Джамаладинова) — украинская певица крымскотатарского происхождения. Стала всемирно известной благодаря победе на Евровидении.",
+                photo: "https://upload.wikimedia.org/wikipedia/commons/a/a0/Jamala_ESC_2016.jpg"
+            }
+        ];
+
+        const listContainer = document.getElementById('celebrity-list');
+        const infoPanel = document.getElementById('infoPanel');
+        const celebName = document.getElementById('celebName');
+        const infoContent = document.getElementById('infoContent');
+        let currentCeleb = null;
+
+        // Нормализация текста для более гибкого поиска
+        function normalizeText(text) {
+            return text.toLowerCase().replace(/\s+/g, "");
+        }
+
+        function renderList(filter = "") {
+            const normFilter = normalizeText(filter);
+            listContainer.innerHTML = "";
+            celebrities
+                .filter(c => normalizeText(c.name).includes(normFilter))
+                .forEach(c => {
+                    const card = document.createElement('div');
+                    card.className = 'card';
+                    card.tabIndex = 0; // для доступности клавиатуры
+                    card.innerHTML = `
+                        <img src="${c.photo}" alt="${c.name}">
+                        <h3>${c.name}</h3>
+                        <button type="button" aria-label="Подробнее о ${c.name}">Подробнее</button>
+                    `;
+                    card.querySelector('button').addEventListener('click', () => openPanel(c.name));
+                    listContainer.appendChild(card);
+                });
+
+            if (listContainer.innerHTML === "") {
+                listContainer.innerHTML = `<p style="text-align:center; width:100%; color:#666;">Ничего не найдено</p>`;
+            }
+        }
+
+        function openPanel(name) {
+            currentCeleb = celebrities.find(c => c.name === name);
+            if (!currentCeleb) return;
+            celebName.textContent = name;
+            infoContent.innerHTML = "Выбери, что узнать о " + name + ".";
+            infoPanel.classList.add('open');
+        }
+
+        function closePanel() {
+            infoPanel.classList.remove('open');
+            currentCeleb = null;
+        }
+
+        function showInfo(type) {
+            if (!currentCeleb) return;
+            let content = "";
+            switch(type) {
+                case 'age': content = currentCeleb.age; break;
+                case 'height': content = currentCeleb.height; break;
+                case 'family': content = currentCeleb.family; break;
+                case 'job': content = currentCeleb.job; break;
+                case 'bio': content = currentCeleb.bio; break;
+                case 'photo': content = `<img src="${currentCeleb.photo}" alt="${currentCeleb.name}" style="max-width:100%; border-radius:10px;">`; break;
+            }
+            infoContent.innerHTML = content;
+        }
+
+        document.getElementById('search').addEventListener('input', (e) => {
+            renderList(e.target.value);
+        });
+
+        // Показать всех при загрузке
+        renderList();
+    </script>
+</body>
+</html>
